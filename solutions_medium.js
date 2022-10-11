@@ -13,7 +13,8 @@ const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 //m3();
 //m4();
 //m5();
-m6();
+//m6();
+m7();
 
 async function m1() {
   // Setup
@@ -167,4 +168,23 @@ async function m6() {
   // Completion
   console.log(await tx.wait());
   console.log(`M6 completed in transaction ${tx.hash}`);
+}
+
+async function m7() {
+  // Setup
+  const address = "0x5CD7daDE9b8BD31416B5B550a67B8f79Caf3C4ba";
+  const abi = ["function mint_nft(uint64 subscription_id) public"];
+  const contract = new ethers.Contract(address, abi, provider);
+  const signedContract = contract.connect(signer);
+
+  // Requirement: You need to register a subscription at https://vrf.chain.link/ and add the contract (0x5CD7daDE9b8BD31416B5B550a67B8f79Caf3C4ba) as a consumer
+
+  // Interaction
+  const tx = await signedContract.mint_nft(
+    parseInt(process.env.VRF_SUBSCRIPTION_ID)
+  );
+
+  // Completion
+  console.log(await tx.wait());
+  console.log(`M7 completed in transaction ${tx.hash}`);
 }
