@@ -13,7 +13,8 @@ const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 //e3();
 //e4();
 //e5();
-e6();
+//e6();
+//e7();
 
 /**
  * E1:
@@ -85,8 +86,8 @@ async function e4() {
       const tx = await signedContract.mintNft(location, newLocation);
 
       // Completion
-      console.log(`New location: ${newLocation}`);
       console.log(await tx.wait());
+      console.log(`New location: ${newLocation}`);
       console.log(`E4 completed in transaction ${tx.hash}`);
 
       break;
@@ -116,8 +117,8 @@ async function e5() {
   const tx = await signedContract.mintNft(currentValueAtA, newValueAtA);
 
   // Completion
-  console.log(`New value at A: ${newValueAtA.toString()}`);
   console.log(await tx.wait());
+  console.log(`New value at A: ${newValueAtA.toString()}`);
   console.log(`E5 completed in transaction ${tx.hash}`);
 }
 
@@ -148,4 +149,29 @@ async function e6() {
   // Completion
   console.log(await tx.wait());
   console.log(`E6 completed in transaction ${tx.hash}`);
+}
+
+async function e7() {
+  // Setup
+  const address = "0xf9Fce2937a71E83EBe43dfbc726B6212c9EB6106";
+  const abi = [
+    "function mintNft(uint256 key) public",
+    "function getMappingValue(uint256 key) public view returns (bool)",
+  ];
+  const contract = new ethers.Contract(address, abi, provider);
+  const signedContract = contract.connect(signer);
+
+  // Interaction
+  for (let key = 0; key < Number.MAX_SAFE_INTEGER; key++) {
+    const keyTaken = await contract.getMappingValue(key);
+    if (!keyTaken) {
+      const tx = await signedContract.mintNft(key);
+
+      // Completion
+      console.log(await tx.wait());
+      console.log(`Key ${key} taken`);
+      console.log(`E7 completed in transaction ${tx.hash}`);
+      break;
+    }
+  }
 }
