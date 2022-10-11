@@ -11,8 +11,8 @@ const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 //e1();
 //e2();
 //e3();
-
 e4();
+//e5();
 
 /**
  * E1:
@@ -74,12 +74,13 @@ async function e4() {
   const contract = new ethers.Contract(address, abi, provider);
   const signedContract = contract.connect(signer);
 
+  // Interaction
   for (let location = 0; location < 5; location++) {
     const locationAvailable = await contract.getBooleanArray(location);
     if (locationAvailable) {
+      console.log(`Current location: ${location}`);
       const newLocation = Math.floor(Math.random() * 6);
 
-      // Interaction
       const tx = await signedContract.mintNft(location, newLocation);
 
       // Completion
@@ -90,4 +91,31 @@ async function e4() {
       break;
     }
   }
+}
+
+async function e5() {
+  // Setup
+  const address = "0x59a9E94f3F9b874e1bB7319973AB6063E9b95380";
+  const MyStruct = "(uint256 a, uint256 b, uint256 c)";
+
+  const abi = [
+    "function mintNft(uint256 valueAtA, uint256 newValueAtA) public",
+    `function getStruct() public view returns (${MyStruct} memory myStruct)`,
+  ];
+  const contract = new ethers.Contract(address, abi, provider);
+  const signedContract = contract.connect(signer);
+
+  // Interaction
+
+  const currentStruct = await contract.getStruct();
+  const currentValueAtA = currentStruct.a;
+  console.log(`Current value at A: ${currentValueAtA.toString()}`);
+  const newValueAtA = ethers.BigNumber.from(Math.floor(Math.random() * 600));
+
+  const tx = await signedContract.mintNft(currentValueAtA, newValueAtA);
+
+  // Completion
+  console.log(`New value at A: ${newValueAtA.toString()}`);
+  console.log(await tx.wait());
+  console.log(`E5 completed in transaction ${tx.hash}`);
 }
