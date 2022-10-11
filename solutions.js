@@ -11,8 +11,9 @@ const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 //e1();
 //e2();
 //e3();
-e4();
+//e4();
 //e5();
+e6();
 
 /**
  * E1:
@@ -118,4 +119,33 @@ async function e5() {
   console.log(`New value at A: ${newValueAtA.toString()}`);
   console.log(await tx.wait());
   console.log(`E5 completed in transaction ${tx.hash}`);
+}
+
+async function e6() {
+  // Setup
+  // https://docs.chain.link/docs/data-feeds/price-feeds/addresses/#Goerli%20Testnet
+  const priceFeedAddress = "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e";
+  const address = "0xD547C52FDE4E1e2C17E5d3E3a6DA87990e922711";
+  const priceFeedAbi = [
+    "function latestRoundData() public view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)",
+  ];
+  const abi = ["function mintNft(int256 priceOfEth) public"];
+  const priceFeedContract = new ethers.Contract(
+    priceFeedAddress,
+    priceFeedAbi,
+    provider
+  );
+  const contract = new ethers.Contract(address, abi, provider);
+  const signedContract = contract.connect(signer);
+
+  // Interaction
+  const latestRoudData = await priceFeedContract.latestRoundData();
+  const ethPrice = latestRoudData.answer;
+  console.log(`Current ETH price in USD in Görli: ${ethPrice}`);
+
+  const tx = await signedContract.mintNft(ethPrice);
+
+  // Completion
+  console.log(await tx.wait());
+  console.log(`E6 completed in transaction ${tx.hash}`);
 }
