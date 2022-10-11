@@ -64,6 +64,7 @@ async function e3() {
 }
 
 async function e4() {
+  // Setup
   const address = "0x46B6c3446dc78517E61e59Ac76AB605dCCb1Dd7e";
   // bool[5] private s_booleanArray;
   const abi = [
@@ -73,11 +74,20 @@ async function e4() {
   const contract = new ethers.Contract(address, abi, provider);
   const signedContract = contract.connect(signer);
 
-  for (let i = 0; i < 5; i++) {
-    console.log(await contract.getBooleanArray(i));
-  }
-  /*const tx = await signedContract.mintNft(2);
+  for (let location = 0; location < 5; location++) {
+    const locationAvailable = await contract.getBooleanArray(location);
+    if (locationAvailable) {
+      const newLocation = Math.floor(Math.random() * 6);
 
-  console.log(await tx.wait());
-  console.log(`E3 completed in transaction ${tx.hash}`);*/
+      // Interaction
+      const tx = await signedContract.mintNft(location, newLocation);
+
+      // Completion
+      console.log(`New location: ${newLocation}`);
+      console.log(await tx.wait());
+      console.log(`E4 completed in transaction ${tx.hash}`);
+
+      break;
+    }
+  }
 }
