@@ -198,8 +198,7 @@ async function m8() {
   const signedContract = contract.connect(signer);
 
   // Requirement: Deploy contract M8.sol (it's in the /contracts folder) and set the address here
-  const m8ReceiverContractAddress =
-    "0xBc6F53372808C4491043659629033Fbb39cC0cFA";
+  const m8ReceiverContractAddress = process.env.M8_CONTRACT_ADDRESS;
 
   // Interaction
   const tx = await signedContract.mint_nft(m8ReceiverContractAddress);
