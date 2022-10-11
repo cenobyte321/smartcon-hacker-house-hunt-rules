@@ -14,7 +14,8 @@ const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 //m4();
 //m5();
 //m6();
-m7();
+//m7();
+m8();
 
 async function m1() {
   // Setup
@@ -187,4 +188,23 @@ async function m7() {
   // Completion
   console.log(await tx.wait());
   console.log(`M7 completed in transaction ${tx.hash}`);
+}
+
+async function m8() {
+  // Setup
+  const address = "0xc1a4260BbDAf25Bb5916A4d03F8625604d7BFfeA";
+  const abi = ["function mint_nft(address) public"];
+  const contract = new ethers.Contract(address, abi, provider);
+  const signedContract = contract.connect(signer);
+
+  // Requirement: Deploy contract M8.sol (it's in the /contracts folder) and set the address here
+  const m8ReceiverContractAddress =
+    "0xBc6F53372808C4491043659629033Fbb39cC0cFA";
+
+  // Interaction
+  const tx = await signedContract.mint_nft(m8ReceiverContractAddress);
+
+  // Completion
+  console.log(await tx.wait());
+  console.log(`M8 completed in transaction ${tx.hash}`);
 }
