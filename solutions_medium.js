@@ -9,6 +9,7 @@ const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
 const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
 //m1();
+m2();
 
 async function m1() {
   // Setup
@@ -35,4 +36,32 @@ async function m1() {
       break;
     }
   }
+}
+
+async function m2() {
+  // Setup
+  const address = "0x753A9fb74057384FA295a45020FEB978B5704257";
+  const abi = [
+    "function mintNft(uint8 addValue, uint8 newStartingValue) public",
+    "function getValue() public view returns (uint8)",
+  ];
+  const contract = new ethers.Contract(address, abi, provider);
+  const signedContract = contract.connect(signer);
+
+  // Interaction
+  const myValue = await contract.getValue();
+  console.log(`Current value: ${myValue}`);
+  const overflowForUint8 = ethers.BigNumber.from(256);
+  const addValue = overflowForUint8.sub(myValue);
+
+  const newStartingValue = ethers.BigNumber.from(
+    Math.floor(Math.random() * 255)
+  );
+
+  const tx = await signedContract.mintNft(addValue, newStartingValue);
+
+  // Completion
+  console.log(await tx.wait());
+  console.log(`New starting value: ${newStartingValue.toString()}`);
+  console.log(`M2 completed in transaction ${tx.hash}`);
 }
