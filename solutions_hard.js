@@ -8,7 +8,8 @@ require("dotenv").config();
 const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
 const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
-h1();
+//h1();
+h2();
 
 async function h1() {
   // Couple of notes for this one:
@@ -23,7 +24,8 @@ async function h1() {
   //       "0x64dcf9451e8a445a9b7bc831e48c134c4faddbb6",
   //       i
   //     )
-  // );
+  //   );
+  // }
   // Or looking at the sequence of internal transactions: https://goerli.etherscan.io/address/0x64dcf9451e8a445a9b7bc831e48c134c4faddbb6#internaltx
   // Only the contract owner/creator can rectify this by setting the H1 address using the setH1(address) function.
   // The owner of the Helper contract is an EOA (Externally-Owned Account).
@@ -65,4 +67,35 @@ async function h1() {
   // Completion
   console.log(await tx.wait());
   console.log(`H1 completed in transaction ${tx.hash}`);
+}
+
+async function h2() {
+  // Setup
+  const address = "0x35182E3182B08fe968B2619f6eE161Cd5f5CeFb1";
+  const abi = ["function mintNft(address yourAddress, bytes4 selector) public"];
+  const contract = new ethers.Contract(address, abi, provider);
+  const signedContract = contract.connect(signer);
+
+  const externalAddress = process.env.H2_CONTRACT_ADDRESS;
+  const externalAbi = ["function doSomethingElse() public"];
+  const externalInterface = new ethers.utils.Interface(externalAbi);
+  const externalMethodSelector =
+    externalInterface.getSighash("doSomethingElse()");
+
+  // Interaction
+
+  // Get Helper Address
+  const slot8Data = await provider.getStorageAt(address, 8);
+  console.log(`Data at slot 8 (Helper contract address): ${slot8Data}`);
+  const helperAddress = slot8Data.replace("0x000000000000000000000000", "0x");
+  console.log(`Helper Address: ${helperAddress}`);
+
+  const tx = await signedContract.mintNft(
+    externalAddress,
+    externalMethodSelector
+  );
+
+  // Completion
+  console.log(await tx.wait());
+  console.log(`H2 completed in transaction ${tx.hash}`);
 }
