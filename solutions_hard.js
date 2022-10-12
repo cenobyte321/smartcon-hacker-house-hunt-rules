@@ -9,7 +9,8 @@ const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
 const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
 //h1();
-h2();
+//h2();
+h3();
 
 async function h1() {
   // Couple of notes for this one:
@@ -98,4 +99,99 @@ async function h2() {
   // Completion
   console.log(await tx.wait());
   console.log(`H2 completed in transaction ${tx.hash}`);
+}
+
+async function h3() {
+  // Setup
+  const address = "0xDA47cAdADC4B7ab574085D83cE1Ed9a375DdB743";
+  const abi = ["function mintNft(bytes4 selector) public "];
+  const contract = new ethers.Contract(address, abi, provider);
+  const signedContract = contract.connect(signer);
+
+  // Interaction
+
+  // Get Helper Address
+  const slot8Data = await provider.getStorageAt(address, 8);
+  console.log(`Data at slot 8 (Helper contract address): ${slot8Data}`);
+  const helperAddress = slot8Data.replace("0x000000000000000000000000", "0x");
+  console.log(`Helper Address: ${helperAddress}`);
+
+  // Helper can be decompiled in Etherscan which leave us with this:
+  // # Palkeoramix decompiler.
+
+  // def storage:
+  //   stor0 is uint256 at storage 0
+
+  // def unknowne18d4afd() payable:
+  //   require not stor0
+  //   stor0 = 1
+  //   return 7
+
+  // def getNumberOne() payable:
+  //   require 1 == stor0
+  //   stor0 = 2
+  //   return 7
+
+  // def getNumberTwo() payable:
+  //   require 2 == stor0
+  //   stor0 = 3
+  //   return 7
+
+  // def getNumberThree() payable:
+  //   require 3 == stor0
+  //   stor0 = 0
+  //   return 7
+
+  // def _fallback() payable: # default function
+  //   require not stor0
+  //   stor0 = 1
+  //   return 7
+
+  // We can then write an ABI out of it:
+
+  const helperAbi = [
+    "function getNumberOne() payable",
+    "function getNumberTwo() payable",
+    "function getNumberThree() payable",
+  ];
+
+  const interface = new ethers.utils.Interface(helperAbi);
+
+  // Since stor0's value can shift around depending on the state it was left. We need to verify it's value first.
+  // The decompiled bytecode shows that stor0 is located at slot 0
+  const currentValue = parseInt(await provider.getStorageAt(helperAddress, 0));
+
+  console.log(`Current value: ${currentValue}`);
+
+  if (currentValue === 0) {
+    // Set stor0 value to 1 by calling the fallback function
+    const fallBackTx = await signer.sendTransaction({ to: helperAddress });
+    console.log(await fallBackTx.wait());
+    currentValue = 1;
+  }
+
+  let methodSelector = "";
+  switch (currentValue) {
+    case 1:
+      methodSelector = interface.getSighash("getNumberOne()");
+      console.log("Calling getNumberOne()");
+      break;
+    case 2:
+      methodSelector = interface.getSighash("getNumberTwo()");
+      console.log("Calling getNumberTwo()");
+      break;
+    case 3:
+      methodSelector = interface.getSighash("getNumberThree()");
+      console.log("Calling getNumberThree()");
+      break;
+    default:
+      console.error("Unexpected value!");
+      break;
+  }
+
+  const tx = await signedContract.mintNft(methodSelector);
+
+  // Completion
+  console.log(await tx.wait());
+  console.log(`H3 completed in transaction ${tx.hash}`);
 }
